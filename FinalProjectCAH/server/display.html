@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<h1> score is stored in web sql.</h1>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>
+<script>
+	// change the listed IP address to your local WiFi IP address
+  	const socket = io('http://192.168.2.13:4000');
+ 
+  	var db = openDatabase("records", "1.0", "records of users", 32678);
+	 
+	// database to store the players result
+	db.transaction(function(transaction){
+		transaction.executeSql("CREATE TABLE IF NOT EXISTS records (" +
+			"id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT," +
+			"name TEXT NOT NULL, score TEXT NOT NULL);");
+	});
+
+	var errCallback = function(){
+		alert("database error!");
+	}
+
+	socket.on("hereScore", data => {
+		
+		var tmp = data.userRecords[0];
+		var name = tmp.uName;
+		var score = tmp.score; 
+	
+		console.log("name: ", name);
+		console.log("score: ", score);
+
+		// This is the SAVE function
+		db.transaction(function(transaction){
+			transaction.executeSql(("INSERT INTO records (name, score) VALUES (?, ?);"), 
+			[name, score], function(transaction, results){console.log("results:", results);}, errCallback);
+		});
+	});
+</script>
+
+</body>
+</html>
